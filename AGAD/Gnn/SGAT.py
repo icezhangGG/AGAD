@@ -52,26 +52,20 @@ class SGAT_Net(th.nn.Module):
    
         init_x0 = init_x0.squeeze(0)
         init_x = init_x.squeeze(0)
-        #print("第一次卷积qian后x1维度:", init_x0.shape)
         x1 = self.conv11(init_x0, edge_index1)
         #############################平均池化层压缩维度##############################
-        #print("第一次卷积qian后x1维度:", x1.shape)
         po = nn.AvgPool1d(8,8)
         x1 = po(x1.unsqueeze(1))
         x1 = x1.squeeze(1)
-        #print("第一次卷积qian后x1维度:", x1.shape)
         ###########################################################
         ##############################线性层压缩维度#############################
         #lin = nn.Linear(x1.size(1), 128, bias=True).cuda()
         #x1 = lin(x1)
         ###########################################################
-        #print("第一次卷积后x1维度:", x1.shape)
         #注意力机制
         x1 = F.relu(x1)
-        # print("第一次经过relu函数:", x1.shape)
         #x1 = F.dropout(x1, p=self.dropout, training=self.training)
 
-        # print("一次卷积后edge_x1",edge_index1.shape)
         x1 = self.conv22(x1, edge_index1)
         #############################平均池化层压缩维度##############################
         # po = nn.AvgPool1d(8, 8)
@@ -79,17 +73,12 @@ class SGAT_Net(th.nn.Module):
         # x1 = x1.squeeze(1)
         #x1 = lin(x1)
         #############################平均池化层压缩维度##############################
-        #print("第二次卷积后x1维度:", x1.shape)
         x1 = F.elu(x1)
-        #print("第二次经过relu函数:", x1.shape)
         x1 = scatter_mean(x1, data.batch, dim=0)
-        #print("x1经过scatter_mean:", x1.shape)
         x1_g = x1
         x1 = self.hard_fc1(x1)
-        #print("x1经过hard_fc1:", x1.shape)
         x1_t = x1
         x1 = th.cat((x1_g, x1_t), 1)
-        #print("scatter+hard在1维度拼接:",x1.shape)
         x2 = self.conv11(init_x, edge_index2)
         #############################平均池化压缩维度############################
         po = nn.AvgPool1d(8, 8)
